@@ -1,0 +1,107 @@
+<html lang="en">
+
+<head>
+    <script src="pako.js"></script>
+    <style>
+        * {
+            font-family: monospace;
+            font-weight: bold;
+            margin-bottom: .5rem;
+        }
+
+        .name, .title {
+            font-size: 2rem;
+        }
+    </style>
+</head>
+
+
+<body>
+    <div class="title">Factorio savegame .datX unpacker/packer</div>
+    <div>No data is send to server. All calculations is done locally.</div>
+    <br>
+    
+    <span class="name">Unpack</span>
+    <input type="file" onchange="unpack(this.files)">
+    <div style="display: flex;">
+        Status:&nbsp; <span id="unpacker_status" style="color: green"></span>
+    </div>
+
+    <span class="name">Pack</span>
+    <input type="file" onchange="pack(this.files)" accept='.bin'>
+    <div style="display: flex;">
+        Status:&nbsp; <span id="packer_status" style="color: green"></span>
+    </div>
+
+    <script>
+        let status_label_id = '';
+
+        function unpack(files) {
+            status_label_id = 'unpacker_status';
+            pack_unpack(files, false);
+        }
+
+        function pack(files) {
+            status_label_id = 'packer_status'
+            pack_unpack(files, true);
+        }
+
+        function pack_unpack(files, pack = false) {
+            try {
+                const file = files[0];
+                status('Processing ' + file.name + '...');
+                const reader = new FileReader();
+                reader.onload = (event) => {
+                    try {
+                        const data = new Uint8Array(event.target.result);
+                        const result = pack ? pako.deflate(data, {
+                            level: 1
+                        }) : pako.inflate(data);
+                        status('DONE');
+                        const fileName = (pack ? file.name.replace(/.bin$/, '') : (file.name + '.bin'));
+                        downloadBin(result, fileName);
+                    } catch (error) {
+                        status_error(JSON.stringify(error));
+                    }
+                };
+                reader.readAsArrayBuffer(file);
+            } catch (error) {
+                status_error(JSON.stringify(error));
+            }
+        }
+
+        function status(text, color = 'green') {
+            const label = document.getElementById(status_label_id);
+            label.innerText = text;
+            if (color)
+                label.style.color = color;
+        }
+
+        function status_error(text) {
+            status(text, 'red');
+        }
+
+        function downloadBin(data, fileName) {
+            var MIME_TYPE = "application/octet-stream";
+            var file = new File([data], fileName, {
+                type: MIME_TYPE
+            });
+            window.location.href = window.URL.createObjectURL(file);
+        }
+    </script>
+
+    <!-- LikeBtn.com BEGIN -->
+    <span class="likebtn-wrapper" data-theme="elegant" data-i18n_like="THANKS" data-ef_voting="grow" data-identifier="item_1" style="margin-top: 2rem;" data-i18n_like_tooltip=" " data-i18n_dislike_tooltip=" "></span>
+    <script>
+        (function(d, e, s) {
+            if (d.getElementById("likebtn_wjs")) return;
+            a = d.createElement(e);
+            m = d.getElementsByTagName(e)[0];
+            a.async = 1; a.id = "likebtn_wjs"; a.src = s;
+            m.parentNode.insertBefore(a, m)
+        })(document, "script", "//w.likebtn.com/js/w/widget.js");
+    </script>
+    <!-- LikeBtn.com END -->
+</body>
+
+</html>
