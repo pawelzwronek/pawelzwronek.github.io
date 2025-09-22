@@ -82,11 +82,20 @@
         }
 
         function downloadBin(data, fileName) {
-            var MIME_TYPE = "application/octet-stream";
-            var file = new File([data], fileName, {
-                type: MIME_TYPE
-            });
-            window.location.href = window.URL.createObjectURL(file);
+            const MIME_TYPE = "application/octet-stream";
+            const file = new Blob([data], {type: MIME_TYPE});
+            const fileUrl = URL.createObjectURL(file);
+
+            const a = document.createElement('a');
+            a.href = fileUrl;
+            a.download = fileName;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+
+            setTimeout(() => {
+                URL.revokeObjectURL(fileUrl);
+            }, 100);
         }
     </script>
 
